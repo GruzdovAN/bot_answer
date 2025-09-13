@@ -31,6 +31,9 @@ class Config:
         
         # Настройки чата
         self.CHANNEL_USERNAME = os.getenv('CHANNEL_USERNAME')
+        
+        # Настройка режима ответов (bot/user)
+        self.USE_USER_ACCOUNT = os.getenv('USE_USER_ACCOUNT', 'false').lower() in ['true', '1', 'yes']
     
     def _validate_config(self):
         """Проверяет, что все необходимые переменные заданы"""
@@ -38,9 +41,12 @@ class Config:
             'API_ID_TG': self.API_ID,
             'API_HASH_TG': self.API_HASH,
             'PHONE_NUMBER': self.PHONE_NUMBER,
-            'CHANNEL_USERNAME': self.CHANNEL_USERNAME,
-            'BOT_TOKEN': self.BOT_TOKEN
+            'CHANNEL_USERNAME': self.CHANNEL_USERNAME
         }
+        
+        # BOT_TOKEN обязателен только если не используется пользовательский аккаунт
+        if not self.USE_USER_ACCOUNT:
+            required_vars['BOT_TOKEN'] = self.BOT_TOKEN
         
         missing_vars = [var for var, value in required_vars.items() if not value]
         if missing_vars:
@@ -49,6 +55,12 @@ class Config:
             for var in missing_vars:
                 logger.error(f"   {var}=ваше_значение")
             exit(1)
+        
+        # Логируем режим работы
+        if self.USE_USER_ACCOUNT:
+            logger.info("Режим работы: ответы от имени пользователя")
+        else:
+            logger.info("Режим работы: ответы от имени бота")
         
         logger.info("Конфигурация загружена успешно")
     

@@ -120,7 +120,7 @@ class SimpleResponder(BaseBot):
                 'text': text,
                 'message_type': 'text',
                 'is_bot_response': False,
-                'raw_data': message.to_dict() if hasattr(message, 'to_dict') else None
+                'raw_data': self._safe_serialize_message(message)
             }
             
             # Сохраняем сообщение в базу данных
@@ -170,5 +170,9 @@ class SimpleResponder(BaseBot):
                 logger.debug(f"Сообщение #{self.stats['total_messages']}: {message.text} (без ответа)")
         
         logger.info("Мониторинг запущен. Нажмите Ctrl+C для остановки")
+        if config.USE_USER_ACCOUNT:
+            logger.info("Отвечаем от имени пользователя")
+        else:
+            logger.info(f"Отвечаем через бота: {config.BOT_TOKEN[:10]}...")
         
         await self.run_until_disconnected()

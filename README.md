@@ -84,6 +84,9 @@ bot_answer/
 - **[Установка Docker](docs/DOCKER_SETUP.md)** - настройка Docker
 - **[Настройка переменных](docs/ENV_SETUP.md)** - конфигурация .env
 - **[Внешний доступ](docs/EXTERNAL_ACCESS.md)** - подключение к БД
+- **[Схема базы данных](docs/DATABASE_SCHEMA.md)** - структура таблиц
+- **[Поток данных](docs/DATA_FLOW.md)** - как заполняются таблицы
+- **[Быстрая справка](docs/QUICK_REFERENCE.md)** - основные запросы и команды
 - **[Управление сессиями](docs/SESSION_MANAGEMENT.md)** - сессии Telegram
 - **[Безопасность](docs/SECURITY.md)** - безопасность проекта
 

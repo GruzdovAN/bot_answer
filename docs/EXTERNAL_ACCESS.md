@@ -154,6 +154,8 @@ public class PostgreSQLConnection {
 
 ## 📊 Основные таблицы
 
+> **📖 Подробная схема базы данных:** [DATABASE_SCHEMA.md](DATABASE_SCHEMA.md)
+
 ### messages
 ```sql
 SELECT 

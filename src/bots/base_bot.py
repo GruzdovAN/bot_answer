@@ -64,19 +64,28 @@ class BaseBot:
         
         logger.info(f"Запуск {self.name}")
         logger.info(f"Читаем через: {config.PHONE_NUMBER}")
-        logger.info(f"Отвечаем через бота: {config.BOT_TOKEN[:10]}...")
         
-        # Проверяем права бота в чате
-        logger.info("Проверка прав бота...")
-        if not await check_bot_permissions(self.bot_client, config.CHANNEL_USERNAME):
-            logger.error("Бот не может работать в этом чате. Завершение работы.")
-            return False
+        if config.USE_USER_ACCOUNT:
+            logger.info("Отвечаем от имени пользователя")
+            # Проверяем права пользователя в чате
+            logger.info("Проверка прав пользователя...")
+            if not await check_bot_permissions(self.reader_client, config.CHANNEL_USERNAME):
+                logger.error("Пользователь не может работать в этом чате. Завершение работы.")
+                return False
+        else:
+            logger.info(f"Отвечаем через бота: {config.BOT_TOKEN[:10]}...")
+            # Проверяем права бота в чате
+            logger.info("Проверка прав бота...")
+            if not await check_bot_permissions(self.bot_client, config.CHANNEL_USERNAME):
+                logger.error("Бот не может работать в этом чате. Завершение работы.")
+                return False
         
         # Инициализируем базу данных
         try:
             self.db_session = db_manager.get_session()
             # Получаем или создаем чат в базе данных
-            chat_entity = await self.bot_client.get_entity(config.CHANNEL_USERNAME)
+            # Используем reader_client для получения информации о чате
+            chat_entity = await self.reader_client.get_entity(config.CHANNEL_USERNAME)
             self.chat_db_id = db_manager.get_or_create_chat(
                 self.db_session,
                 telegram_id=chat_entity.id,
@@ -112,7 +121,15 @@ class BaseBot:
             bool: True если сообщение отправлено успешно
         """
         try:
-            await self.bot_client.send_message(config.CHANNEL_USERNAME, response)
+            if config.USE_USER_ACCOUNT:
+                # Отправляем от имени пользователя
+                await self.reader_client.send_message(config.CHANNEL_USERNAME, response)
+                logger.debug(f"Ответ отправлен от имени пользователя: {response[:50]}...")
+            else:
+                # Отправляем от имени бота
+                await self.bot_client.send_message(config.CHANNEL_USERNAME, response)
+                logger.debug(f"Ответ отправлен от имени бота: {response[:50]}...")
+            
             self.stats['responses_sent'] += 1
             return True
         except Exception as e:
@@ -211,6 +228,29 @@ class BaseBot:
             logger.error(f"Ошибка сохранения ответа бота в БД: {e}")
             return None
     
+    def _safe_serialize_message(self, message):
+        """Безопасная сериализация сообщения для JSON"""
+        try:
+            if hasattr(message, 'to_dict'):
+                data = message.to_dict()
+                # Конвертируем datetime объекты в строки
+                return self._convert_datetime_to_string(data)
+            return None
+        except Exception as e:
+            logger.warning(f"Ошибка сериализации сообщения: {e}")
+            return None
+    
+    def _convert_datetime_to_string(self, obj):
+        """Рекурсивно конвертирует datetime объекты в строки"""
+        if isinstance(obj, dict):
+            return {key: self._convert_datetime_to_string(value) for key, value in obj.items()}
+        elif isinstance(obj, list):
+            return [self._convert_datetime_to_string(item) for item in obj]
+        elif hasattr(obj, 'isoformat'):  # datetime объекты
+            return obj.isoformat()
+        else:
+            return obj
+
     def print_stats(self):
         """Выводит статистику работы бота"""
         logger.info("Итоговая статистика:")

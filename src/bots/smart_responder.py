@@ -125,7 +125,7 @@ class SmartResponder(BaseBot):
                 'text': text,
                 'message_type': 'text',
                 'is_bot_response': False,
-                'raw_data': message.to_dict() if hasattr(message, 'to_dict') else None
+                'raw_data': self._safe_serialize_message(message)
             }
             
             # Сохраняем сообщение в базу данных
@@ -183,6 +183,9 @@ class SmartResponder(BaseBot):
         
         logger.info("Умный автоответчик запущен. Нажмите Ctrl+C для остановки")
         logger.info(f"Читаем сообщения через: {config.PHONE_NUMBER}")
-        logger.info(f"Отвечаем через бота: {config.BOT_TOKEN[:10]}...")
+        if config.USE_USER_ACCOUNT:
+            logger.info("Отвечаем от имени пользователя")
+        else:
+            logger.info(f"Отвечаем через бота: {config.BOT_TOKEN[:10]}...")
         
         await self.run_until_disconnected()
