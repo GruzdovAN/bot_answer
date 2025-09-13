@@ -1,0 +1,91 @@
+version: '3.8'
+
+services:
+  # PostgreSQL база данных
+  postgres:
+    image: postgres:15-alpine
+    container_name: telegram_bot_postgres
+    environment:
+      POSTGRES_DB: ${DB_NAME:-telegram_bot}
+      POSTGRES_USER: ${DB_USER:-telegram_admin}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_INITDB_ARGS: "--encoding=UTF-8"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./docker/postgres/init.sql:/docker-entrypoint-initdb.d/init.sql
+      - ./docker/postgres/postgresql.conf:/etc/postgresql/postgresql.conf
+      - ./docker/postgres/pg_hba.conf:/etc/postgresql/pg_hba.conf
+    ports:
+      - "${POSTGRES_HOST:-0.0.0.0}:${POSTGRES_PORT:-5432}:5432"  # Доступ по внешнему IP
+    networks:
+      - bot_network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-telegram_admin}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    command: ["postgres", "-c", "config_file=/etc/postgresql/postgresql.conf"]
+
+  # Telegram бот
+  telegram_bot:
+    build: .
+    container_name: telegram_bot_app
+    environment:
+      # Telegram API
+      API_ID_TG: ${API_ID_TG}
+      API_HASH_TG: ${API_HASH_TG}
+      PHONE_NUMBER: ${PHONE_NUMBER}
+      CHANNEL_USERNAME: ${CHANNEL_USERNAME}
+      BOT_TOKEN: ${BOT_TOKEN}
+      
+      # База данных
+      DB_HOST: ${DB_HOST:-postgres}
+      DB_PORT: ${DB_PORT:-5432}
+      DB_NAME: ${DB_NAME:-telegram_bot}
+      DB_USER: ${DB_USER:-telegram_admin}
+      DB_PASSWORD: ${DB_PASSWORD}
+      
+      # Логирование
+      LOG_LEVEL: INFO
+    volumes:
+      - ./logs:/app/logs
+      - ./src:/app/src
+      - ./sessions:/app/sessions
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - bot_network
+    restart: unless-stopped
+    command: ["python", "main.py"]
+
+  # pgAdmin для управления базой данных (опционально)
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: telegram_bot_pgadmin
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_EMAIL:-admin@telegram-bot.com}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD}
+      PGADMIN_CONFIG_SERVER_MODE: 'False'
+    ports:
+      - "${PGADMIN_HOST:-0.0.0.0}:${PGADMIN_PORT:-8080}:80"  # Доступ по внешнему IP
+    volumes:
+      - pgadmin_data:/var/lib/pgadmin
+    depends_on:
+      - postgres
+    networks:
+      - bot_network
+    restart: unless-stopped
+    profiles:
+      - admin
+
+volumes:
+  postgres_data:
+    driver: local
+  pgadmin_data:
+    driver: local
+
+networks:
+  bot_network:
+    driver: bridge
