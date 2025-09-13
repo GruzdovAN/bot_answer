@@ -124,11 +124,11 @@ class BaseBot:
             if config.USE_USER_ACCOUNT:
                 # Отправляем от имени пользователя
                 await self.reader_client.send_message(config.CHANNEL_USERNAME, response)
-                logger.debug(f"Ответ отправлен от имени пользователя: {response[:50]}...")
+                logger.info(f"Ответ отправлен от имени пользователя: {response[:50]}...")
             else:
                 # Отправляем от имени бота
                 await self.bot_client.send_message(config.CHANNEL_USERNAME, response)
-                logger.debug(f"Ответ отправлен от имени бота: {response[:50]}...")
+                logger.info(f"Ответ отправлен от имени бота: {response[:50]}...")
             
             self.stats['responses_sent'] += 1
             return True
