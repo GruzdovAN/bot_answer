@@ -31,6 +31,7 @@ class Config:
         
         # Настройки чата
         self.CHANNEL_USERNAME = os.getenv('CHANNEL_USERNAME')
+        self.GROUP_NAME = os.getenv('GROUP_NAME')
         
         # Настройка режима ответов (bot/user)
         self.USE_USER_ACCOUNT = os.getenv('USE_USER_ACCOUNT', 'false').lower() in ['true', '1', 'yes']
@@ -71,7 +72,8 @@ class Config:
             'api_hash': self.API_HASH,
             'phone': self.PHONE_NUMBER,
             'bot_token': self.BOT_TOKEN,
-            'channel': self.CHANNEL_USERNAME
+            'channel': self.CHANNEL_USERNAME,
+            'group': self.GROUP_NAME
         }
     
     def __str__(self):

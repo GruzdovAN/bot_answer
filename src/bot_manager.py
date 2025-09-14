@@ -3,7 +3,7 @@
 """
 import asyncio
 from typing import Dict, Type
-from .bots import BaseBot, SmartResponder, SimpleResponder
+from .bots import BaseBot, SmartResponder, SimpleResponder, GroupResponder
 from .config.logging_config import get_logger
 
 logger = get_logger("bot_manager")
@@ -15,7 +15,8 @@ class BotManager:
     def __init__(self):
         self.bots: Dict[str, Type[BaseBot]] = {
             'smart': SmartResponder,
-            'simple': SimpleResponder
+            'simple': SimpleResponder,
+            'group': GroupResponder
         }
         self.current_bot: BaseBot = None
     
@@ -57,7 +58,7 @@ class BotManager:
         Запускает бота указанного типа
         
         Args:
-            bot_type: Тип бота ('smart' или 'simple')
+            bot_type: Тип бота ('smart', 'simple' или 'group')
         """
         self.current_bot = self.get_bot_by_choice(bot_type)
         await self.current_bot.start_monitoring()

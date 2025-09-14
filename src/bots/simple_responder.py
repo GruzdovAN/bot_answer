@@ -42,6 +42,9 @@ class SimpleResponder(BaseBot):
         
         for keyword, reply in self.responses.items():
             if keyword in text_lower:
+                # Добавляем подпись, если отвечаем от имени пользователя
+                if config.USE_USER_ACCOUNT:
+                    reply += "\n\n— Отвечает автоматически"
                 return reply
         
         return None
