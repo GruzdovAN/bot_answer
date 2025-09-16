@@ -1,1 +1,1 @@
-# Основной пакет бота
+# Universal Telegram Scraper
