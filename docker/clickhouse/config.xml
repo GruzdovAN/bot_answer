@@ -1,0 +1,61 @@
+<?xml version="1.0"?>
+<clickhouse>
+    <!-- Listen on all interfaces -->
+    <listen_host>0.0.0.0</listen_host>
+    
+    <!-- HTTP port -->
+    <http_port>8123</http_port>
+    
+    <!-- Native port -->
+    <tcp_port>9000</tcp_port>
+    
+    <!-- Data path -->
+    <path>/var/lib/clickhouse/</path>
+    
+    <!-- Temporary files path -->
+    <tmp_path>/var/lib/clickhouse/tmp/</tmp_path>
+    
+    <!-- User files path -->
+    <user_files_path>/var/lib/clickhouse/user_files/</user_files_path>
+    
+    <!-- Format schema path -->
+    <format_schema_path>/var/lib/clickhouse/format_schemas/</format_schema_path>
+    
+    <!-- Enable access management -->
+    <access_control_path>/var/lib/clickhouse/access/</access_control_path>
+    
+    <!-- Logging -->
+    <logger>
+        <level>information</level>
+        <log>/var/log/clickhouse-server/clickhouse-server.log</log>
+        <errorlog>/var/log/clickhouse-server/clickhouse-server.err.log</errorlog>
+        <size>1000M</size>
+        <count>10</count>
+    </logger>
+    
+    <!-- Users configuration -->
+    <users_config>users.xml</users_config>
+    
+    <!-- User directories -->
+    <user_directories>
+        <users_xml>
+            <path>/etc/clickhouse-server/users.xml</path>
+        </users_xml>
+    </user_directories>
+    
+    <!-- Default database -->
+    <default_database>telegram_bot_analytics</default_database>
+    
+    <!-- Memory settings -->
+    <max_memory_usage>10000000000</max_memory_usage>
+    <max_bytes_before_external_group_by>20000000000</max_bytes_before_external_group_by>
+    <max_bytes_before_external_sort>20000000000</max_bytes_before_external_sort>
+    
+    <!-- Network settings -->
+    <max_connections>4096</max_connections>
+    <keep_alive_timeout>3</keep_alive_timeout>
+    <max_concurrent_queries>100</max_concurrent_queries>
+    
+    <!-- Security settings -->
+    <disable_internal_dns_cache>1</disable_internal_dns_cache>
+</clickhouse>
