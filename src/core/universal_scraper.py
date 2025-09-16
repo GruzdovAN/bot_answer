@@ -14,7 +14,7 @@ class UniversalScraper:
         self.channel_manager = ChannelManager()
         self.clickhouse = ClickHouseClient()
         self.client = TelegramClient(
-            'universal_scraper',
+            'sessions/universal_scraper',
             api_id=os.getenv('API_ID_TG'),
             api_hash=os.getenv('API_HASH_TG')
         )

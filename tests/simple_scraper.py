@@ -5,8 +5,13 @@
 
 import asyncio
 import os
+import sys
 from dotenv import load_dotenv
 from telethon import TelegramClient
+
+# Добавляем корневую директорию в путь
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
 from src.parsers.simple_parser import SimpleParser
 from src.database.clickhouse_client import ClickHouseClient
 

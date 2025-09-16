@@ -4,7 +4,11 @@
 """
 
 import os
+import sys
 from dotenv import load_dotenv
+
+# Добавляем корневую директорию в путь
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 # Загружаем переменные окружения
 load_dotenv()

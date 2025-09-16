@@ -1,13 +1,17 @@
 #!/usr/bin/env python3
 """
-Запуск универсального скрапера
+Запуск универсального скрапера с использованием существующей сессии
 """
 
 import asyncio
 import logging
 import os
+import sys
 from dotenv import load_dotenv
-from src.core.universal_scraper import UniversalScraper
+from telethon import TelegramClient
+
+# Добавляем корневую директорию в путь
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 # Загружаем переменные окружения
 load_dotenv()
@@ -21,12 +25,24 @@ async def main():
     
     print("🚀 Запуск универсального Telegram скрапера...")
     
-    scraper = UniversalScraper()
+    # Используем существующую сессию
+    session_name = 'sessions/reader'
+    
+    client = TelegramClient(
+        session_name,
+        api_id=os.getenv('API_ID_TG'),
+        api_hash=os.getenv('API_HASH_TG')
+    )
     
     try:
         print("🔗 Подключаемся к Telegram...")
-        await scraper.client.start()
+        await client.start()
         print("✅ Подключение к Telegram успешно!")
+        
+        # Импортируем и запускаем скрапер
+        from src.core.universal_scraper import UniversalScraper
+        scraper = UniversalScraper()
+        scraper.client = client  # Используем существующий клиент
         
         print("📋 Начинаем сбор данных...")
         await scraper.scrape_all_channels()
@@ -36,7 +52,7 @@ async def main():
         print(f"❌ Ошибка: {e}")
         logging.error(f"Ошибка при выполнении скрапера: {e}")
     finally:
-        await scraper.client.disconnect()
+        await client.disconnect()
         print("🔌 Отключение от Telegram")
 
 if __name__ == "__main__":
