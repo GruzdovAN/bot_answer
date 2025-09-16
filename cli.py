@@ -62,6 +62,21 @@ def check():
             click.echo(f"Ошибка: {e.stderr}")
 
 @scraper.command()
+def sessions():
+    """Проверить доступность Telegram сессий"""
+    click.echo("🔍 Проверка доступности Telegram сессий...")
+    try:
+        import subprocess
+        result = subprocess.run([sys.executable, 'scripts/check_sessions.py'], 
+                              capture_output=True, text=True, check=True)
+        click.echo(result.stdout)
+        click.echo("✅ Проверка сессий завершена успешно!")
+    except subprocess.CalledProcessError as e:
+        click.echo(f"❌ Ошибка при проверке сессий: {e}")
+        if e.stderr:
+            click.echo(f"Ошибка: {e.stderr}")
+
+@scraper.command()
 def simple():
     """Простой сбор данных"""
     click.echo("📥 Простой сбор данных...")
@@ -112,6 +127,110 @@ def analytics():
         click.echo(f"❌ Ошибка при показе аналитики: {e}")
         if e.stderr:
             click.echo(f"Ошибка: {e.stderr}")
+
+@scraper.command()
+def test_castings():
+    """Быстрый тест чтения каналов из папки @castings"""
+    click.echo("🧪 Быстрый тест чтения каналов из папки @castings...")
+    try:
+        import subprocess
+        result = subprocess.run([sys.executable, 'quick_castings_test.py'], 
+                              capture_output=True, text=True, check=True)
+        click.echo(result.stdout)
+        click.echo("✅ Тест завершен успешно!")
+    except subprocess.CalledProcessError as e:
+        click.echo(f"❌ Ошибка при тестировании: {e}")
+        if e.stderr:
+            click.echo(f"Ошибка: {e.stderr}")
+
+@scraper.command()
+@click.option('--days', default=7, help='Количество дней назад для чтения сообщений')
+@click.option('--limit', default=50, help='Лимит сообщений на канал')
+def read_castings(days, limit):
+    """Читать все каналы из папки @castings"""
+    click.echo(f"📁 Чтение каналов из папки @castings...")
+    click.echo(f"Период: {days} дней назад, лимит: {limit} сообщений на канал")
+    try:
+        import subprocess
+        import os
+        
+        # Создаем временный скрипт с параметрами
+        temp_script = f"""
+import asyncio
+import sys
+import os
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+from scripts.read_castings_folder import CastingsFolderReader
+
+async def main():
+    reader = CastingsFolderReader()
+    try:
+        await reader.start()
+        result = await reader.read_all_castings_channels(days_back={days}, limit_per_channel={limit})
+        
+        # Выводим результаты
+        print("\\n" + "="*50)
+        print("РЕЗУЛЬТАТЫ ЧТЕНИЯ КАНАЛОВ ИЗ ПАПКИ @CASTINGS")
+        print("="*50)
+        
+        print(f"Всего каналов найдено: {{result['total_channels']}}")
+        print(f"Всего сообщений прочитано: {{result['total_messages']}}")
+        print(f"Дата чтения: {{result['read_date']}}")
+        print(f"Период: {{result['days_back']}} дней назад")
+        print(f"Лимит на канал: {{result['limit_per_channel']}} сообщений")
+        
+        # Сохраняем в базу данных
+        all_messages = []
+        for channel_data in result['channels']:
+            all_messages.extend(channel_data['messages'])
+        
+        if all_messages:
+            print(f"\\n💾 Сохранение {{len(all_messages)}} сообщений в базу данных...")
+            saved = await reader.save_to_database(all_messages)
+            if saved:
+                print("✅ Сообщения успешно сохранены в ClickHouse")
+            else:
+                print("⚠️ Не удалось сохранить в базу данных")
+        
+        # Обновляем конфигурацию
+        if result['channels']:
+            print(f"\\n📝 Обновление конфигурации каналов...")
+            channels_info = [ch['channel_info'] for ch in result['channels']]
+            config_updated = reader.update_channels_config(channels_info)
+            if config_updated:
+                print("✅ Конфигурация каналов обновлена")
+            else:
+                print("⚠️ Не удалось обновить конфигурацию")
+        
+    finally:
+        await reader.stop()
+
+if __name__ == '__main__':
+    asyncio.run(main())
+"""
+        
+        # Записываем временный скрипт
+        temp_file = 'temp_castings_reader.py'
+        with open(temp_file, 'w', encoding='utf-8') as f:
+            f.write(temp_script)
+        
+        try:
+            result = subprocess.run([sys.executable, temp_file], 
+                                  capture_output=True, text=True, check=True)
+            click.echo(result.stdout)
+            click.echo("✅ Чтение каналов из папки @castings завершено успешно!")
+        finally:
+            # Удаляем временный файл
+            if os.path.exists(temp_file):
+                os.remove(temp_file)
+                
+    except subprocess.CalledProcessError as e:
+        click.echo(f"❌ Ошибка при чтении каналов: {e}")
+        if e.stderr:
+            click.echo(f"Ошибка: {e.stderr}")
+    except Exception as e:
+        click.echo(f"❌ Неожиданная ошибка: {e}")
 
 @root.group()
 def bot():
@@ -239,6 +358,36 @@ def status():
         click.echo("✅ Статус показан успешно!")
     except subprocess.CalledProcessError as e:
         click.echo(f"❌ Ошибка при показе статуса: {e}")
+        if e.stderr:
+            click.echo(f"Ошибка: {e.stderr}")
+
+@system.command()
+def database():
+    """Управление базой данных ClickHouse"""
+    click.echo("🗄️ Управление базой данных ClickHouse...")
+    try:
+        import subprocess
+        result = subprocess.run([sys.executable, 'scripts/manage_database.py'], 
+                              capture_output=True, text=True, check=True)
+        click.echo(result.stdout)
+        click.echo("✅ Управление базой данных завершено успешно!")
+    except subprocess.CalledProcessError as e:
+        click.echo(f"❌ Ошибка при управлении базой данных: {e}")
+        if e.stderr:
+            click.echo(f"Ошибка: {e.stderr}")
+
+@system.command()
+def clean_duplicates():
+    """Очистка дублей в базе данных ClickHouse"""
+    click.echo("🧹 Очистка дублей в ClickHouse...")
+    try:
+        import subprocess
+        result = subprocess.run([sys.executable, 'scripts/clean_duplicates.py'], 
+                              capture_output=True, text=True, check=True)
+        click.echo(result.stdout)
+        click.echo("✅ Очистка дублей завершена успешно!")
+    except subprocess.CalledProcessError as e:
+        click.echo(f"❌ Ошибка при очистке дублей: {e}")
         if e.stderr:
             click.echo(f"Ошибка: {e.stderr}")
 
