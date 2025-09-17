@@ -1,0 +1,81 @@
+version: '3.8'
+
+services:
+  casting-monitor:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: casting-monitor
+    restart: unless-stopped
+    
+    env_file:
+      - ../.env  # Используем существующий .env файл
+    
+    environment:
+      # ClickHouse настройки
+      - CLICKHOUSE_HOST=${CLICKHOUSE_HOST:-172.17.0.1}
+      - CLICKHOUSE_PORT=${CLICKHOUSE_PORT:-8123}
+      - CLICKHOUSE_USER=${CLICKHOUSE_USER:-clickhouse_admin}
+      - CLICKHOUSE_DB=${CLICKHOUSE_DB:-telegram_analytics}
+      
+      # Настройки мониторинга
+      - MONITOR_INTERVAL=${MONITOR_INTERVAL:-5}
+      - BATCH_SIZE=${BATCH_SIZE:-10}
+      - MAX_RETRIES=${MAX_RETRIES:-3}
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+    
+    volumes:
+      # Telegram сессии из основного проекта
+      - ../sessions:/app/sessions
+      # Логи
+      - ./logs:/app/logs
+      # Конфигурация каналов из основного проекта
+      - ../config:/app/config:ro
+      # Исходный код для импорта модулей
+      - ../src:/app/src_modules:ro
+    
+    # depends_on:
+    #   - clickhouse
+    
+    networks:
+      - telegram-network
+    
+    # Ограничения ресурсов
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+          cpus: '0.5'
+        reservations:
+          memory: 256M
+          cpus: '0.25'
+
+  # ClickHouse уже запущен в другом контейнере
+  # clickhouse:
+  #   image: clickhouse/clickhouse-server:latest
+  #   container_name: clickhouse
+  #   restart: unless-stopped
+  #   
+  #   ports:
+  #     - "8123:8123"
+  #     - "9000:9000"
+  #   
+  #   environment:
+  #     - CLICKHOUSE_DB=telegram_analytics
+  #     - CLICKHOUSE_USER=clickhouse_admin
+  #     - CLICKHOUSE_PASSWORD=${CLICKHOUSE_PASSWORD}
+  #   
+  #   volumes:
+  #     - clickhouse_data:/var/lib/clickhouse
+  #     - ../docker/clickhouse/config.xml:/etc/clickhouse-server/config.xml:ro
+  #     - ../docker/clickhouse/users.xml:/etc/clickhouse-server/users.xml:ro
+  #   
+  #   networks:
+  #     - telegram-network
+
+volumes:
+  clickhouse_data:
+
+networks:
+  telegram-network:
+    driver: bridge

@@ -4,3 +4,11 @@ asyncio
 sqlalchemy==2.0.23
 psycopg2-binary==2.9.9
 alembic==1.13.1
+# LLM модуль зависимости
+openai>=1.0.0
+httpx>=0.24.0
+pydantic>=2.0.0
+
+# Зависимости для обработки сообщений из Telegram
+# logging и datetime входят в стандартную библиотеку Python
+# json входит в стандартную библиотеку Python
