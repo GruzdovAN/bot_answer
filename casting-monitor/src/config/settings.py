@@ -22,6 +22,10 @@ class Settings:
     DEEPSEEK_API_KEY: str = os.getenv('DEEPSEEK_API_KEY', '')
     LLM_MODEL: str = os.getenv('LLM_MODEL', 'deepseek-chat')
     
+    # Уведомления (из существующего .env)
+    BOT_TOKEN: str = os.getenv('BOT_TOKEN', '')
+    NOTIFICATION_CHAT_ID: str = os.getenv('NOTIFICATION_CHAT_ID', '@gruzdovan')
+    
     # Мониторинг
     MONITOR_INTERVAL: int = int(os.getenv('MONITOR_INTERVAL', '5'))
     BATCH_SIZE: int = int(os.getenv('BATCH_SIZE', '10'))
@@ -32,7 +36,7 @@ class Settings:
         """Проверка обязательных настроек"""
         required = [
             'API_ID_TG', 'API_HASH_TG', 'PHONE_NUMBER',
-            'CLICKHOUSE_PASSWORD', 'DEEPSEEK_API_KEY'
+            'CLICKHOUSE_PASSWORD', 'DEEPSEEK_API_KEY', 'BOT_TOKEN'
         ]
         
         missing = []

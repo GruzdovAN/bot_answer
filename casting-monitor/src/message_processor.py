@@ -9,6 +9,7 @@ from telethon.tl.types import Message
 
 from llm_client import LLMClient
 from clickhouse_client import ClickHouseClient
+from notification_client import NotificationClient
 from config.settings import Settings
 
 class MessageProcessor:
@@ -16,6 +17,10 @@ class MessageProcessor:
         self.settings = settings
         self.llm_client = LLMClient(settings)
         self.clickhouse_client = ClickHouseClient(settings)
+        self.notification_client = NotificationClient(
+            settings.BOT_TOKEN, 
+            settings.NOTIFICATION_CHAT_ID
+        )
         self.logger = logging.getLogger(__name__)
     
     async def process_message(self, message: Message):
@@ -32,6 +37,9 @@ class MessageProcessor:
             
             # 4. Обновление записи с LLM результатом
             await self._update_with_llm_result(message_data['message_id'], llm_result)
+            
+            # 5. Отправка уведомления
+            await self._send_notification(message_data, llm_result)
             
             self.logger.info(f"Сообщение {message_data['message_id']} обработано успешно")
             
@@ -85,7 +93,17 @@ class MessageProcessor:
         await self.clickhouse_client.update_llm_analysis(message_id, llm_result)
         self.logger.debug(f"LLM результат для сообщения {message_id} сохранен")
     
+    async def _send_notification(self, message_data: Dict[str, Any], llm_result: Dict[str, Any]):
+        """Отправка уведомления о новом сообщении"""
+        try:
+            await self.notification_client.send_new_message_notification(message_data, llm_result)
+            self.logger.debug(f"Уведомление для сообщения {message_data['message_id']} отправлено")
+        except Exception as e:
+            self.logger.error(f"Ошибка при отправке уведомления: {e}")
+            # Не прерываем обработку из-за ошибки уведомления
+    
     async def close(self):
         """Закрытие соединений"""
         await self.llm_client.close()
         await self.clickhouse_client.close()
+        await self.notification_client.close()

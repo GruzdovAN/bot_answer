@@ -23,6 +23,9 @@ services:
       - BATCH_SIZE=${BATCH_SIZE:-10}
       - MAX_RETRIES=${MAX_RETRIES:-3}
       - LOG_LEVEL=${LOG_LEVEL:-INFO}
+      
+      # Настройки уведомлений
+      - NOTIFICATION_CHAT_ID=${NOTIFICATION_CHAT_ID:-@gruzdovan}
     
     volumes:
       # Telegram сессии из основного проекта
